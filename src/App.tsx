@@ -202,7 +202,7 @@ function App(){
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <div className="brand"><img className="brand-logo" src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Teleton_Chile_Logo.svg" alt="Logo de Teletón Chile"/><div><strong>CADA HORA CUENTA</strong><small>PLANIFICACIÓN ASISTENCIAL</small></div></div>
+      <div className="brand"><img className="brand-logo" src="/teleton-logo.svg" alt="Logo de Teletón Chile"/><div><strong>CADA HORA CUENTA</strong><small>PLANIFICACIÓN ASISTENCIAL</small></div></div>
       <div className="side-caption">CENTRO DE CONTROL</div>
       <nav aria-label="Navegación principal">{([
         ['overview','Resumen general'],['people','Profesionales'],['changes','Cambios contractuales'],['realized','Planificado vs. realizado'],['parameters','Parámetros'],['imports','Carga de datos'],['audit','Trazabilidad'],['assistant','Asistente de IA'],['users','Usuarios'],
@@ -272,7 +272,7 @@ function LoginScreen({loading,onLogin,status,darkMode,onToggleTheme}:{loading:bo
   return <main className="access-screen">
     <div className="access-accent" aria-hidden="true"><div className="access-ring"/><div className="access-accent-copy"><span>TELETÓN CHILE</span><strong>El tiempo<br/>también transforma.</strong><p>Datos que ayudan a planificar una mejor atención.</p></div></div>
     <header className="access-header">
-      <div className="access-brand"><span className="access-brand-mark"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Teleton_Chile_Logo.svg" alt="Logo de Teletón Chile"/></span><span><strong>Cada hora cuenta</strong><small>PLANIFICACIÓN ASISTENCIAL</small></span></div>
+      <div className="access-brand"><span className="access-brand-mark"><img src="/teleton-logo.svg" alt="Logo de Teletón Chile"/></span><span><strong>Cada hora cuenta</strong><small>PLANIFICACIÓN ASISTENCIAL</small></span></div>
       <ThemeToggle enabled={darkMode} onToggle={onToggleTheme} login/>
     </header>
     <div className="access-main">

@@ -73,4 +73,4 @@ La vista del asistente está preparada visualmente. El campo de chat permanecer�
 
 ## Logo
 
-La interfaz usa el [SVG de Teletón Chile alojado en Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Teleton_Chile_Logo.svg). Para funcionamiento sin internet, agrega un recurso autorizado a `public/` y actualiza las dos rutas de imagen en `src/App.tsx`.
+La interfaz usa `public/teleton-logo.svg`, copia local del [SVG de Teletón Chile en Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Teleton_Chile_Logo.svg), para funcionar sin internet.
