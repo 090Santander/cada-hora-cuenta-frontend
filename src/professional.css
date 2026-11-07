@@ -10,3 +10,14 @@
 .bot-process { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 999px; background: #e8f0fb; color: #1d4f91; font-size: 11px; font-weight: 750; }
 .dark-theme .bot-process { background: #1f3350; color: #b9d4f7; }
 .drill-bar { cursor: pointer; }
+.param-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.param-fields label { display: grid; gap: 6px; font-size: 13px; font-weight: 650; color: #384252; }
+.param-fields input:not([type=checkbox]) { height: 42px; border: 1px solid #d5d9e0; border-radius: 10px; padding: 0 12px; font-size: 14px; background: #fff; color: #202434; }
+.param-fields input[readonly] { background: #f6f7f9; }
+.param-json { margin-bottom: 14px; }
+.param-json summary { cursor: pointer; font-size: 13px; font-weight: 700; color: #384252; padding: 6px 0; }
+.param-invalid { color: #a0182c; font-size: 13px; font-weight: 650; }
+.dark-theme .param-fields label, .dark-theme .param-json summary { color: #dce5f0; }
+.dark-theme .param-fields input:not([type=checkbox]) { border-color: #344154; background: #101925; color: #edf2f8; }
+.dark-theme .param-fields input[readonly] { background: #1a2433; }
+.dark-theme .param-invalid { color: #ffb9c5; }
