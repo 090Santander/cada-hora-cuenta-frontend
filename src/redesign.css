@@ -67,6 +67,16 @@ body, .app-shell { background: #f8f9fc; }
   box-shadow: 0 10px 24px #650b1f34;
   font-weight: 750;
 }
+.nav-item .nav-label {
+  width: auto;
+  min-width: 0;
+  flex: 1;
+  color: inherit;
+  text-align: left;
+  font-size: inherit;
+  line-height: 1.25;
+  white-space: nowrap;
+}
 .nav-icon {
   width: 38px !important;
   height: 38px;

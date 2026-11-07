@@ -187,7 +187,7 @@ function App(){
       <div className="side-caption">CENTRO DE CONTROL</div>
       <nav aria-label="Navegación principal">{([
         ['overview','Resumen'],['people','Profesionales'],['changes','Cambios'],['realized','Plan vs real'],['parameters','Parámetros'],['imports','Ingesta'],['audit','Trazabilidad'],['assistant','Asistente IA'],['users','Usuarios'],
-      ] as [Tab,string][]).filter(([id])=>role==='super_admin'||(role==='admin'?!['audit','users'].includes(id):['overview','people','realized','assistant'].includes(id))).map(([id,label])=><button key={id} type="button" className={`nav-item ${tab===id?'active':''}`} aria-current={tab===id?'page':undefined} onClick={()=>setTab(id)}><span className="nav-icon"><NavIcon tab={id}/></span><span className="nav-label">{label}</span>{id==='changes'&&pending.length>0&&<em>{pending.length}</em>}</button>)}</nav>
+      ] as [Tab,string][]).filter(([id])=>role==='super_admin'||(role==='admin'?!['audit','users'].includes(id):['overview','people','realized','assistant'].includes(id))).map(([id,label])=><button key={id} type="button" className={`nav-item ${tab===id?'active':''}`} aria-label={label} aria-current={tab===id?'page':undefined} onClick={()=>setTab(id)}><span className="nav-icon" aria-hidden="true"><NavIcon tab={id}/></span><span className="nav-label">{label}</span>{id==='changes'&&pending.length>0&&<em>{pending.length}</em>}</button>)}</nav>
       <div className="side-bottom"><StatusLight status={serviceStatus}/><small>IDENTIDAD · INGESTA · PLANIFICACIÓN</small><div className="build-id">CADA HORA CUENTA</div></div>
     </aside>
     <main className="main-area">
