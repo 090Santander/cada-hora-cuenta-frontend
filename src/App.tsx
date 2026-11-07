@@ -10,6 +10,8 @@ const API_PROTOCOL = window.location.protocol === 'https:' ? 'https:' : 'http:'
 const INGESTION = import.meta.env.VITE_INGESTION_URL || `${API_PROTOCOL}//${API_HOST}:8001`
 const PLANNING = import.meta.env.VITE_PLANNING_URL || `${API_PROTOCOL}//${API_HOST}:8002`
 const AUTH = import.meta.env.VITE_AUTH_URL || `${API_PROTOCOL}//${API_HOST}:8003`
+// Plan B: sin Blue Prism, la app recalcula al aprobar. Por defecto el proceso 3 del bot retoma el caso.
+const MANUAL_RECALC = import.meta.env.VITE_MANUAL_RECALC === '1'
 let sessionToken = sessionStorage.getItem('chc_session') || ''
 async function apiFetch(url:string, init:RequestInit={}):Promise<Response>{
   const headers=new Headers(init.headers)
@@ -140,8 +142,8 @@ function App(){
 
   async function reviewChange(id:number,action:'aprobar'|'rechazar'){
     try{await postJson(`${PLANNING}/api/cambios/${id}/${action}`,{approved_by:'Planificación central',reason:`${action} desde el dashboard`});
-      if(action==='aprobar'){const item=changes.find(c=>c.id===id);if(item)await postJson(`${PLANNING}/api/recalcular`,{persons:[item.person_id],from_date:item.effective_date,reason:`Cambio ${id} aprobado`,actor:'Planificación central'})}
-      setNotice(action==='aprobar'?'Cambio aprobado y planificación recalculada.':'Cambio rechazado.');await refresh()}
+      if(action==='aprobar'&&MANUAL_RECALC){const item=changes.find(c=>c.id===id);if(item)await postJson(`${PLANNING}/api/recalcular`,{persons:[item.person_id],from_date:item.effective_date,reason:`Cambio ${id} aprobado`,actor:'Planificación central'})}
+      setNotice(action==='rechazar'?'Cambio rechazado.':MANUAL_RECALC?'Cambio aprobado y planificación recalculada.':'Cambio aprobado. Blue Prism retomará el caso y publicará la nueva versión.');await refresh()}
     catch(e){setError(String(e))}
   }
   async function calculate(){
@@ -212,7 +214,7 @@ function App(){
     <main className="main-area">
       <header className="topbar"><div className="topbar-leading"><span className="topbar-mark" aria-hidden="true">✦</span><div><small>ESPACIO DE TRABAJO</small><div className="crumb"><span>{roleLabel(role)}</span><b>/</b>{tabLabel(tab)}</div></div></div><div className="top-actions"><ThemeToggle enabled={darkMode} onToggle={()=>setDarkMode(value=>!value)}/><StatusLight status={serviceStatus}/><div className="topbar-period"><small>PERÍODO</small><strong>{filters.mes||options.meses[options.meses.length-1]||'—'}</strong></div><div className="topbar-user"><span className="avatar" aria-hidden="true">{adminEmail.slice(0,2).toUpperCase()}</span><span className="topbar-user-copy"><strong>{roleLabel(role)}</strong><small>{adminEmail}</small></span></div><button className="topbar-logout" title="Cerrar sesión" aria-label="Cerrar sesión" onClick={logout}><span aria-hidden="true">↗</span><span>Salir</span></button></div></header>
       <div className="page-wrap">
-        <div className="page-heading"><div><div className="eyebrow">PLANIFICACIÓN ASISTENCIAL <span>●</span> {roleLabel(role).toUpperCase()}</div><h1>{pageTitle(tab)}</h1><p>{pageDescription(tab)}</p></div><div className="heading-actions">{tab==='overview'&&role!=='usuario'&&<Button variant="primary" className="button button-primary" onClick={calculate}><span>⟳</span> Recalcular plan</Button>}</div></div>
+        <div className="page-heading"><div><div className="eyebrow">PLANIFICACIÓN ASISTENCIAL <span>●</span> {roleLabel(role).toUpperCase()}</div><h1>{pageTitle(tab)}</h1><p>{pageDescription(tab)}</p></div><div className="heading-actions">{tab==='overview'&&role!=='usuario'&&MANUAL_RECALC&&<Button variant="primary" className="button button-primary" onClick={calculate}><span>⟳</span> Recalcular plan</Button>}</div></div>
         {(error||notice)&&<div className={`toast ${error?'toast-error':''}`}><span>{error||notice}</span><button onClick={()=>{setError('');setNotice('')}}>×</button></div>}
         <div className="filters-row"><div className="filter-label"><span>⌕</span> FILTRAR VISTA</div><select aria-label="Instituto" value={filters.instituto} onChange={e=>setFilters({...filters,instituto:e.target.value})}><option value="">Todos los institutos</option>{options.institutos.map(x=><option key={x} value={x}>{options.institutos_nombres?.[x]||x}</option>)}</select><select aria-label="Área" value={filters.area} onChange={e=>setFilters({...filters,area:e.target.value})}><option value="">Todas las áreas</option>{options.areas.map(x=><option key={x}>{x}</option>)}</select><select aria-label="Período" value={filters.mes} onChange={e=>setFilters({...filters,mes:e.target.value})}><option value="">Todo el año</option>{options.meses.map(x=><option key={x}>{x}</option>)}</select><button className="filter-reset" onClick={()=>setFilters({instituto:'',area:'',mes:''})}>Restablecer</button><span className="filter-scope">{options.version?`VERSIÓN ${String(options.version).padStart(3,'0')}`:'ESPERANDO CARGA'}</span></div>
         {loading&&<div className="loading-line"><span/>Sincronizando indicadores…</div>}

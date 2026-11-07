@@ -39,6 +39,8 @@ VITE_AUTH_URL=http://127.0.0.1:8003
 
 Si ejecutas el backend como **monolito modular** en el puerto `8000`, copia `monolith.env.example` a `.env.local` en lugar de `.env.example`. En Linux: `cp monolith.env.example .env.local`. En PowerShell: `Copy-Item monolith.env.example .env.local`.
 
+Al aprobar un cambio, la app solo registra la decisión: el proceso 3 de Blue Prism retoma el caso y recalcula. Si el bot no está disponible, agrega `VITE_MANUAL_RECALC=1` a `.env.local` y la app recalculará al aprobar y mostrará el botón "Recalcular plan".
+
 Reinicia Vite tras cambiar estas variables. El backend debe incluir el origen del frontend en `CORS_ORIGINS`. No coloques contraseñas ni `INTERNAL_SERVICE_KEY` en variables `VITE_*`, porque quedan visibles en el navegador.
 
 ## Publicar el frontend en GitHub Pages
