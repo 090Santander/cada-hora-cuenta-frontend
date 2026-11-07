@@ -1,0 +1,57 @@
+name: Publicar frontend en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      VITE_AUTH_URL: ${{ vars.VITE_AUTH_URL }}
+      VITE_PLANNING_URL: ${{ vars.VITE_PLANNING_URL }}
+      VITE_INGESTION_URL: ${{ vars.VITE_INGESTION_URL }}
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Validar direcciones del backend
+        shell: bash
+        run: |
+          for name in VITE_AUTH_URL VITE_PLANNING_URL VITE_INGESTION_URL; do
+            value="${!name}"
+            if [[ ! "$value" =~ ^https://[^[:space:]]+$ ]]; then
+              echo "Configura $name con una URL HTTPS en Settings > Secrets and variables > Actions > Variables."
+              exit 1
+            fi
+          done
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Compilar para GitHub Pages
+        run: npm run build -- --base=/cada-hora-cuenta-frontend/
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+      - name: Subir archivos estáticos
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4

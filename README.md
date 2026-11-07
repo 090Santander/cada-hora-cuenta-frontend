@@ -41,6 +41,18 @@ Si ejecutas el backend como **monolito modular** en el puerto `8000`, copia `mon
 
 Reinicia Vite tras cambiar estas variables. El backend debe incluir el origen del frontend en `CORS_ORIGINS`. No coloques contraseñas ni `INTERNAL_SERVICE_KEY` en variables `VITE_*`, porque quedan visibles en el navegador.
 
+## Publicar el frontend en GitHub Pages
+
+GitHub Pages sirve únicamente el frontend estático. Para que el acceso y los datos funcionen, publica el backend por separado bajo HTTPS antes de activar Pages. Las tres direcciones de API son públicas y **no** deben contener credenciales.
+
+1. En `090Santander/cada-hora-cuenta-frontend`, abre **Settings → Secrets and variables → Actions → Variables** y crea `VITE_AUTH_URL`, `VITE_PLANNING_URL` y `VITE_INGESTION_URL` con las URL HTTPS de los servicios. Si usas el monolito modular, pueden ser `https://tu-dominio/auth`, `https://tu-dominio/planning` y `https://tu-dominio/ingestion`.
+2. En el backend, configura `CORS_ORIGINS=https://090santander.github.io` (agrega los orígenes locales separados por comas si también desarrollarás en localhost). Reinicia los servicios.
+3. En el repositorio frontend, abre **Settings → Pages → Build and deployment** y selecciona **GitHub Actions** como origen.
+4. Envía el commit a `main`. El workflow [pages.yml](.github/workflows/pages.yml) instalará dependencias, compilará con la ruta base correcta y publicará `dist/`. Revisa **Actions** para confirmar que terminó correctamente.
+5. Abre `https://090santander.github.io/cada-hora-cuenta-frontend/` y comprueba el inicio de sesión y los tres indicadores de servicio.
+
+El workflow falla de forma explícita si falta una URL HTTPS de API. GitHub Pages no ejecuta FastAPI ni aloja SQLite. No uses datos reales en una demostración pública sin la autorización institucional correspondiente.
+
 ## Vistas por rol
 
 | Perfil | Secciones |
