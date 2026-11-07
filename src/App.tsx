@@ -3,6 +3,7 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 import { Button } from './components/ui/button'
 import { Card } from './components/ui/card'
 import { Badge } from './components/ui/badge'
+import { UsersPage, type AccountRecord } from './components/UsersPage'
 
 const API_HOST = window.location.hostname === 'localhost' ? '127.0.0.1' : (window.location.hostname || '127.0.0.1')
 const API_PROTOCOL = window.location.protocol === 'https:' ? 'https:' : 'http:'
@@ -22,8 +23,8 @@ async function apiFetch(url:string, init:RequestInit={}):Promise<Response>{
 
 type Role = 'super_admin'|'admin'|'usuario'
 type Tab = 'overview'|'people'|'changes'|'realized'|'parameters'|'imports'|'audit'|'assistant'|'users'
-type Account = {id:number;email:string;role:Role;created_at:string}
-type OptionData = {institutos:string[]; areas:string[]; meses:string[]; version:number}
+type Account = AccountRecord
+type OptionData = {institutos:string[]; institutos_nombres?:Record<string,string>; areas:string[]; meses:string[]; version:number}
 type Kpis = {professionals:number;contracts:number;management_target:number;planned_visits:number;foja:number;version:number;pending_changes:number}
 type PlanRow = {person_id:number;institute:string;institute_code:string;area_code:string;cargo:string;hours_week:number;month:string;direct_visits:number;indirect_visits:number;management_target:number;foja:number;band:string;source_kind:string}
 type Change = {id:number;person_id:number;institute:string;kind:string;previous_value:string;new_value:string;effective_date:string;state:string;reason:string;created_at:string}
@@ -53,7 +54,6 @@ function App(){
   const [adminEmail,setAdminEmail]=useState('')
   const [role,setRole]=useState<Role>('usuario')
   const [accounts,setAccounts]=useState<Account[]>([])
-  const [newAccount,setNewAccount]=useState({email:'',password:'',role:'usuario' as Role})
   const [serviceStatus,setServiceStatus]=useState<'green'|'yellow'|'red'>('red')
   const [tab,setTab]=useState<Tab>('overview')
   const [options,setOptions]=useState<OptionData>({institutos:[],areas:[],meses:[],version:0})
@@ -165,13 +165,23 @@ function App(){
       if(!response.ok)throw new Error(await response.text());setParameters({...parameters,[paramKey]:value});setNotice('Parámetro guardado. Recalcula para crear una nueva versión.')}
     catch(e){setError(`No se pudo guardar el parámetro: ${String(e)}`)}
   }
-  async function saveAccount(event:FormEvent<HTMLFormElement>){
-    event.preventDefault()
-    try{
-      await postJson(`${AUTH}/api/usuarios`,newAccount)
-      setNewAccount({email:'',password:'',role:'usuario'});setAccounts(await getJson<Account[]>(`${AUTH}/api/usuarios`))
-      setNotice('Cuenta guardada correctamente.')
-    }catch(e){setError(`No se pudo guardar la cuenta: ${String(e)}`)}
+  async function accountRequestError(response:Response):Promise<never>{
+    const body=await response.json().catch(()=>({detail:'No se pudo completar la operación.'})) as {detail?:string}
+    throw new Error(typeof body.detail==='string'?body.detail:'No se pudo completar la operación.')
+  }
+  async function saveAccount(id:number|null,payload:{email:string;role:Role;password?:string}):Promise<void>{
+    const selfEdit=id!==null&&accounts.some(account=>account.id===id&&account.email===adminEmail)
+    const response=await apiFetch(id===null?`${AUTH}/api/usuarios`:`${AUTH}/api/usuarios/${id}`,{
+      method:id===null?'POST':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),
+    })
+    if(!response.ok)await accountRequestError(response)
+    if(selfEdit){sessionToken='';sessionStorage.removeItem('chc_session');setAuthState('anonymous');return}
+    setAccounts(await getJson<Account[]>(`${AUTH}/api/usuarios`))
+  }
+  async function removeAccount(account:Account):Promise<void>{
+    const response=await apiFetch(`${AUTH}/api/usuarios/${account.id}`,{method:'DELETE'})
+    if(!response.ok)await accountRequestError(response)
+    setAccounts(await getJson<Account[]>(`${AUTH}/api/usuarios`))
   }
 
   async function downloadRejects(importId:number){
@@ -204,7 +214,7 @@ function App(){
       <div className="page-wrap">
         <div className="page-heading"><div><div className="eyebrow">PLANIFICACIÓN ASISTENCIAL <span>●</span> {roleLabel(role).toUpperCase()}</div><h1>{pageTitle(tab)}</h1><p>{pageDescription(tab)}</p></div><div className="heading-actions">{tab==='overview'&&role!=='usuario'&&<Button variant="primary" className="button button-primary" onClick={calculate}><span>⟳</span> Recalcular plan</Button>}</div></div>
         {(error||notice)&&<div className={`toast ${error?'toast-error':''}`}><span>{error||notice}</span><button onClick={()=>{setError('');setNotice('')}}>×</button></div>}
-        <div className="filters-row"><div className="filter-label"><span>⌕</span> FILTRAR VISTA</div><select value={filters.instituto} onChange={e=>setFilters({...filters,instituto:e.target.value})}><option value="">Todos los institutos</option>{options.institutos.map(x=><option key={x}>{x}</option>)}</select><select value={filters.area} onChange={e=>setFilters({...filters,area:e.target.value})}><option value="">Todas las áreas</option>{options.areas.map(x=><option key={x}>{x}</option>)}</select><select value={filters.mes} onChange={e=>setFilters({...filters,mes:e.target.value})}><option value="">Todo el año</option>{options.meses.map(x=><option key={x}>{x}</option>)}</select><button className="filter-reset" onClick={()=>setFilters({instituto:'',area:'',mes:''})}>Restablecer</button><span className="filter-scope">{options.version?`VERSIÓN ${String(options.version).padStart(3,'0')}`:'ESPERANDO CARGA'}</span></div>
+        <div className="filters-row"><div className="filter-label"><span>⌕</span> FILTRAR VISTA</div><select aria-label="Instituto" value={filters.instituto} onChange={e=>setFilters({...filters,instituto:e.target.value})}><option value="">Todos los institutos</option>{options.institutos.map(x=><option key={x} value={x}>{options.institutos_nombres?.[x]||x}</option>)}</select><select aria-label="Área" value={filters.area} onChange={e=>setFilters({...filters,area:e.target.value})}><option value="">Todas las áreas</option>{options.areas.map(x=><option key={x}>{x}</option>)}</select><select aria-label="Período" value={filters.mes} onChange={e=>setFilters({...filters,mes:e.target.value})}><option value="">Todo el año</option>{options.meses.map(x=><option key={x}>{x}</option>)}</select><button className="filter-reset" onClick={()=>setFilters({instituto:'',area:'',mes:''})}>Restablecer</button><span className="filter-scope">{options.version?`VERSIÓN ${String(options.version).padStart(3,'0')}`:'ESPERANDO CARGA'}</span></div>
         {loading&&<div className="loading-line"><span/>Sincronizando indicadores…</div>}
         {tab==='overview'&&<Overview kpis={kpis} chartData={chartData} changes={changes} onNavigate={setTab} canManage={role!=='usuario'} darkMode={darkMode}/>}
         {tab==='people'&&<section className="panel"><div className="panel-head"><div><h2>Dotación planificada</h2><p>{fmt(visibleRows.length)} registros en la vista actual</p></div><div className="search-box">⌕ <input placeholder="Buscar PersonaId, cargo o instituto" value={search} onChange={e=>setSearch(e.target.value)}/></div></div><PeopleTable rows={visibleRows}/></section>}
@@ -213,7 +223,7 @@ function App(){
         {tab==='parameters'&&role!=='usuario'&&<section className="parameter-layout"><div className="panel parameter-menu"><div className="panel-head"><div><h2>Reglas del motor</h2><p>{role==='super_admin'?'Parámetros editables sin despliegue':'Consulta y simulación de reglas'}</p></div></div>{Object.keys(parameters).map(key=><button key={key} className={`param-choice ${paramKey===key?'selected':''}`} onClick={()=>{setParamKey(key);setSimulation(null)}}><span>{key.replaceAll('_',' ')}</span><b>›</b></button>)}</div><div className="panel parameter-editor"><div className="panel-head"><div><h2>{paramKey.replaceAll('_',' ')}</h2><p>JSON de configuración del motor de planificación</p></div><span className="tag tag-cyan">{role==='super_admin'?'EDITABLE':'SOLO LECTURA'}</span></div><textarea spellCheck={false} readOnly={role!=='super_admin'} value={paramText} onChange={e=>setParamText(e.target.value)}/>{simulation&&<div className="simulation-result"><b>Simulación de impacto</b><span>Actual: {fmt(Number(simulation.current||0))} · Proyectado: {fmt(Number(simulation.simulated||0))} · Variación: {fmt(Number(simulation.difference||0))} ({percent(Number(simulation.change_pct||0))})</span></div>}<div className="editor-foot"><span>{role==='super_admin'?'Simula primero; al guardar, recalcula para crear una nueva versión.':'Puedes simular sin modificar las reglas.'}</span><div className="editor-buttons"><button className="button button-ghost" onClick={simulateParameter}>Simular impacto</button>{role==='super_admin'&&<button className="button button-primary" onClick={saveParameter}>Guardar parámetro</button>}</div></div></div></section>}
         {tab==='imports'&&<section className="imports-layout"><div className="panel upload-panel"><div className="panel-head"><div><h2>Ingesta automatizada {uploadKind}</h2><p>Valida el reporte, registra rechazos y envía filas correctas al motor.</p></div><span className="tag tag-green">LISTO</span></div><div className="upload-toggle"><button className={uploadKind==='BUK'?'chosen':''} onClick={()=>{setUploadKind('BUK');setUpload(null)}}>Dotación BUK</button><button className={uploadKind==='SIC'?'chosen':''} onClick={()=>{setUploadKind('SIC');setUpload(null)}}>Atenciones SIC</button></div><label className="dropzone"><input type="file" accept=".xlsx,.xls,.csv" onChange={e=>void uploadFile(e.target.files?.[0])}/><div className="upload-glyph">⇧</div><strong>Selecciona un reporte {uploadKind}</strong><span>Excel o CSV · archivo completo, sin copiar y pegar</span><small>{uploadKind==='BUK'?'Formato oficial: hoja Dotacion_2026, encabezados en la fila 2.':'Columnas: PersonaId, Instituto, Periodo y Atenciones realizadas.'}</small></label><div className="integration-note"><span>↔</span><div><b>Blue Prism → Ingesta → Planificación</b><p>Blue Prism vigila las carpetas de entrada y llama al servicio de ingesta en localhost:8001.</p></div></div></div><div className="panel import-result"><div className="panel-head"><div><h2>Resultado más reciente</h2><p>Validación de filas y gestión de errores</p></div></div>{upload?<><div className="import-metrics"><div><b>{fmt(upload.read)}</b><span>LEÍDAS</span></div><div className="good"><b>{fmt(upload.accepted)}</b><span>VÁLIDAS</span></div><div className="bad"><b>{fmt(upload.rejected.length)}</b><span>RECHAZADAS</span></div></div>{upload.rejected.length>0&&<button className="download-rejects" onClick={()=>void downloadRejects(upload.import_id)}>Descargar Excel de rechazos ↓</button>}<div className="reject-scroll">{upload.rejected.length?upload.rejected.slice(0,100).map((r,i)=><div className="reject-row" key={i}><b>Fila {r.row_number}</b><span>Persona {r.persona_id||'—'}</span><small>{r.reason}</small></div>):<div className="empty-state">Sin rechazos en esta carga.</div>}</div></>:<div className="empty-state">Carga un archivo para ver el resumen de validación.</div>}</div></section>}
         {tab==='assistant'&&<AssistantPanel/>}
-        {tab==='users'&&role==='super_admin'&&<section className="users-layout"><Card className="users-form panel"><div className="panel-head"><div><h2>Crear o actualizar cuenta</h2><p>Asigna un perfil y una contraseña de al menos 12 caracteres.</p></div></div><form onSubmit={saveAccount}><label>Correo electrónico<input type="email" value={newAccount.email} onChange={e=>setNewAccount({...newAccount,email:e.target.value})} required placeholder="persona@institucion.cl"/></label><label>Perfil<select value={newAccount.role} onChange={e=>setNewAccount({...newAccount,role:e.target.value as Role})}><option value="usuario">Usuario · consulta</option><option value="admin">Administrador · operación</option><option value="super_admin">Superadministrador · control total</option></select></label><label>Contraseña<input type="password" minLength={12} value={newAccount.password} onChange={e=>setNewAccount({...newAccount,password:e.target.value})} required autoComplete="new-password"/></label><Button type="submit" variant="primary">Guardar cuenta</Button></form></Card><Card className="users-list panel"><div className="panel-head"><div><h2>Cuentas del sistema</h2><p>{accounts.length} perfiles registrados</p></div></div>{accounts.map(account=><div className="user-row" key={account.id}><div className="user-avatar">{account.email.slice(0,2).toUpperCase()}</div><div><strong>{account.email}</strong><small>{roleLabel(account.role)}</small></div></div>)}</Card></section>}
+        {tab==='users'&&role==='super_admin'&&<UsersPage accounts={accounts} activeEmail={adminEmail} onSave={saveAccount} onDelete={removeAccount}/>}
         {tab==='audit'&&<section className="panel audit-panel"><div className="audit-layout"><div className="audit-hero"><span className="audit-hero-icon" aria-hidden="true">↗</span><span className="audit-hero-kicker">TRAZABILIDAD</span><strong>{audits.length}</strong><p>eventos recientes registrados</p><div className="audit-hero-foot"><span>Versión del plan</span><b>{String(options.version).padStart(3,'0')}</b></div></div><div className="audit-content"><div className="panel-head"><div><span className="section-kicker">HISTORIAL OPERATIVO</span><h2>Registro de actividad</h2><p>Cargas, decisiones y recálculos registrados por el sistema.</p></div><span className="tag tag-cyan">AUDITORÍA</span></div><div className="audit-list">{audits.length?audits.map((a,i)=><div className="audit-row" key={i}><span className="audit-mark" aria-hidden="true">⌁</span><div className="audit-event"><b>{String(a.action||'Evento').replaceAll('_',' ')}</b><p>{String(a.detail||'Sin detalle adicional')}</p></div><div className="audit-meta"><time>{String(a.created_at||'—')}</time><small>{String(a.actor||'Sistema')}</small></div></div>):<div className="audit-empty">Aún no se registran eventos de actividad.</div>}</div></div></div></section>}
         <footer className="page-footer"><span>ACCESO RESTRINGIDO · PLANIFICACIÓN CENTRAL</span><span>CADA HORA CUENTA <i>●</i> PLANIFICACIÓN ASISTENCIAL</span></footer>
       </div>
@@ -259,7 +269,36 @@ function LoginScreen({loading,onLogin,status,darkMode,onToggleTheme}:{loading:bo
     }catch{setMessage('')}
     finally{setBusy(false)}
   }
-  return <main className="login-shell"><div className="login-content"><div className="login-head"><div className="login-brand"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Teleton_Chile_Logo.svg" alt="Logo de Teletón Chile"/><span>CADA HORA CUENTA<small>PLATAFORMA DE PLANIFICACIÓN ASISTENCIAL</small></span></div><ThemeToggle enabled={darkMode} onToggle={onToggleTheme} login/></div><div className="login-intro"><span className="login-kicker">ACCESO INSTITUCIONAL</span><h1>Planificar mejor.<br/><em>Atender más.</em></h1><p>Un espacio para transformar datos de dotación en decisiones claras para la atención.</p></div><Card className="login-card"><div className="login-card-head"><div><span>BIENVENIDO</span><h2>Inicia sesión</h2><p>Ingresa con tu cuenta del sistema.</p></div><StatusLight status={status}/></div><form onSubmit={submit}><label htmlFor="login-email">Correo electrónico</label><input id="login-email" type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="nombre@institucion.cl" required/><label htmlFor="login-password">Contraseña</label><input id="login-password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Ingresa tu contraseña" required/>{message&&<p className="login-error" role="alert">{message}</p>}<Button type="submit" variant="primary" disabled={busy||loading} className="button button-primary login-submit">{busy||loading?'Validando…':'Ingresar al sistema'} <span>→</span></Button></form></Card><p className="login-caption">Acceso restringido · Planificación central Teletón Chile</p></div><div className="login-visual" aria-hidden="true"><div className="login-orbit orbit-one"/><div className="login-orbit orbit-two"/><div className="login-visual-copy"><span>DATOS → DECISIONES → IMPACTO</span><strong>Cada hora<br/>cuenta.</strong><p>Una mirada integral para optimizar la capacidad asistencial.</p></div></div></main>
+  return <main className="access-screen">
+    <div className="access-accent" aria-hidden="true"><div className="access-ring"/><div className="access-accent-copy"><span>TELETÓN CHILE</span><strong>El tiempo<br/>también transforma.</strong><p>Datos que ayudan a planificar una mejor atención.</p></div></div>
+    <header className="access-header">
+      <div className="access-brand"><span className="access-brand-mark"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Teleton_Chile_Logo.svg" alt="Logo de Teletón Chile"/></span><span><strong>Cada hora cuenta</strong><small>PLANIFICACIÓN ASISTENCIAL</small></span></div>
+      <ThemeToggle enabled={darkMode} onToggle={onToggleTheme} login/>
+    </header>
+    <div className="access-main">
+      <div className="access-story">
+        <span className="access-eyebrow"><i/> PLATAFORMA INSTITUCIONAL</span>
+        <h1>Más claridad<br/>para <em>cada hora.</em></h1>
+        <p>Planifica la capacidad asistencial, revisa indicadores y toma decisiones con información trazable.</p>
+        <div className="access-story-line"><span>01</span> Datos de dotación <i/><span>02</span> Planificación <i/><span>03</span> Impacto</div>
+      </div>
+      <section className="access-card" aria-labelledby="access-title">
+        <div className="access-card-top"><span>ACCESO AL SISTEMA</span><StatusLight status={status}/></div>
+        <h2 id="access-title">Inicia sesión</h2>
+        <p className="access-card-copy">Ingresa con tu cuenta institucional para continuar.</p>
+        <form onSubmit={submit}>
+          <label htmlFor="login-email">Correo electrónico</label>
+          <input id="login-email" type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="nombre@institucion.cl" required/>
+          <label htmlFor="login-password">Contraseña</label>
+          <input id="login-password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Ingresa tu contraseña" required/>
+          {message&&<p className="access-error" role="alert">{message}</p>}
+          <Button type="submit" variant="primary" disabled={busy||loading} className="button button-primary access-submit">{busy||loading?'Validando…':'Entrar a la plataforma'} <span aria-hidden="true">→</span></Button>
+        </form>
+        <div className="access-card-foot"><span aria-hidden="true">◈</span> Acceso protegido para equipos autorizados</div>
+      </section>
+    </div>
+    <footer className="access-footer">Teletón Chile <span>·</span> Cada hora cuenta</footer>
+  </main>
 }
 function AssistantPanel(){return <section className="assistant-layout"><Card className="assistant-hero"><span className="assistant-eyebrow">PRÓXIMA INTEGRACIÓN · BLUE PRISM</span><div className="assistant-orb">✦</div><h2>Asistente inteligente</h2><p>La interfaz del asistente está preparada para conectar el flujo de Blue Prism cuando se reciba su contrato de integración. Las respuestas quedarán vinculadas a datos autorizados y a la trazabilidad del sistema.</p><div className="assistant-capabilities"><span>Consultas de planificación</span><span>Explicación de brechas</span><span>Apoyo en decisiones</span></div></Card><Card className="assistant-chat"><div className="assistant-chat-head"><div className="assistant-avatar">✦</div><div><strong>Asistente de planificación</strong><small>Integración pendiente</small></div></div><div className="assistant-message"><span>✦</span><p>Cuando conectemos Blue Prism, podrás consultar aquí los indicadores, cambios y proyecciones de forma segura.</p></div><div className="assistant-composer"><input aria-label="Consulta al asistente" placeholder="Disponible al conectar Blue Prism" disabled/><button disabled aria-label="Enviar consulta">→</button></div></Card></section>}
 function displayValue(value:string){try{const parsed=JSON.parse(value) as Record<string,unknown>;return Object.entries(parsed).map(([key,val])=>`${key}: ${String(val)}`).join(' · ')}catch{return value||'—'}}

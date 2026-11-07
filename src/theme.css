@@ -20,7 +20,6 @@
 .theme-toggle svg { width: 18px; height: 18px; flex: none; }
 .theme-toggle:hover { background: #ffffff36; }
 .theme-toggle:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-.login-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .theme-toggle.login-mode { border-color: #e4d8db; background: #fff; color: #a71b32; }
 .theme-toggle.login-mode:hover { background: #f7e9ed; }
 .theme-toggle.login-mode:focus-visible { outline-color: #b0192f; }
@@ -90,7 +89,6 @@
 .dark-theme .users-form input,
 .dark-theme .users-form select,
 .dark-theme .parameter-editor textarea,
-.dark-theme .login-card input,
 .dark-theme .assistant-composer input {
   border-color: #344154;
   background: #101925;
@@ -180,28 +178,25 @@
 .dark-theme .page-footer { color: #aab6c7; }
 .dark-theme .toast { border-color: #245a43; background: #153729; color: #b0ebc9; }
 .dark-theme .toast-error { border-color: #743d4d; background: #3b202e; color: #ffb9c5; }
-.dark-theme .login-shell { background: #111925; }
-.dark-theme .login-visual { background: linear-gradient(148deg, #490d1d, #791a30 56%, #a22b43); }
-.dark-theme .login-brand,
-.dark-theme .login-kicker,
-.dark-theme .login-card-head span { color: #f092a3; }
-.dark-theme .login-brand small,
-.dark-theme .login-intro p,
-.dark-theme .login-card-head p,
-.dark-theme .login-caption { color: #aebacc; }
-.dark-theme .login-intro h1,
-.dark-theme .login-card-head h2,
-.dark-theme .login-card label { color: #f0f4f8; }
-.dark-theme .login-intro h1 em { color: #ff8aa0; }
-.dark-theme .login-card { border-color: #344154 !important; background: #1a2533; box-shadow: 0 24px 56px #0004 !important; }
-.dark-theme .login-card .traffic-light { border-color: #435064; background: #283546; }
-.dark-theme .login-card input:focus { border-color: #f08aa0; background: #172332; }
-.dark-theme .login-error { color: #ffb6c2; }
 .dark-theme .theme-toggle.login-mode { border-color: #485569; background: #233042; color: #edf2f8; }
 .dark-theme .theme-toggle.login-mode:hover { background: #304057; }
 
 @media (max-width: 540px) {
   .theme-toggle { min-width: 42px; width: 42px; padding: 0; }
   .theme-toggle span { display: none; }
-  .login-head .theme-toggle { width: 44px; height: 42px; }
+}
+
+/* Balanced access screen and compact navigation rail. */
+@media (min-width: 761px) {
+  .sidebar { width: 228px; }
+  .main-area { margin-left: 244px; }
+  .sidebar .brand-logo { width: 50px; height: 50px; }
+  .sidebar .brand strong { font-size: 14px; letter-spacing: .055em; }
+  .sidebar .brand small { font-size: 9px; }
+  .sidebar .nav-item { gap: 10px; padding-inline: 9px; }
+  .sidebar .nav-icon { width: 34px !important; height: 34px; }
+}
+@media (min-width: 761px) and (max-width: 1180px) {
+  .sidebar { width: 210px; }
+  .main-area { margin-left: 226px; }
 }
