@@ -53,6 +53,10 @@ function App(){
     try { return window.localStorage.getItem('chc_theme')==='dark' }
     catch { return false }
   })
+  const [highContrast,setHighContrast]=useState(()=>{
+    try { const saved=window.localStorage.getItem('chc_contrast'); return saved?saved==='on':window.matchMedia('(prefers-contrast: more)').matches }
+    catch { return false }
+  })
   const [authState,setAuthState]=useState<'checking'|'anonymous'|'authenticated'>('checking')
   const [adminEmail,setAdminEmail]=useState('')
   const [role,setRole]=useState<Role>('usuario')
@@ -83,6 +87,12 @@ function App(){
     document.documentElement.classList.toggle('dark-theme',darkMode)
     try { window.localStorage.setItem('chc_theme',darkMode?'dark':'light') } catch { /* El modo sigue disponible durante esta sesión. */ }
   },[darkMode])
+  useEffect(()=>{
+    document.documentElement.classList.toggle('high-contrast',highContrast)
+    try { window.localStorage.setItem('chc_contrast',highContrast?'on':'off') } catch { /* El modo sigue disponible durante esta sesión. */ }
+  },[highContrast])
+  const toggleDark=()=>{setDarkMode(value=>!value);setHighContrast(false)}
+  const toggleContrast=()=>{setHighContrast(value=>!value);setDarkMode(false)}
 
   useEffect(()=>{
     if(!sessionToken){setAuthState('anonymous');return}
@@ -205,7 +215,7 @@ function App(){
   }
   if(authState!=='authenticated') return <LoginScreen loading={authState==='checking'} onLogin={(token,email,userRole)=>{
     sessionToken=token;sessionStorage.setItem('chc_session',token);setAdminEmail(email);setRole(userRole);setTab('overview');setAuthState('authenticated')
-  }} status={serviceStatus} darkMode={darkMode} onToggleTheme={()=>setDarkMode(value=>!value)}/>
+  }} status={serviceStatus} darkMode={darkMode} onToggleTheme={toggleDark} highContrast={highContrast} onToggleContrast={toggleContrast}/>
 
   return <div className="app-shell">
     <aside className="sidebar">
@@ -217,7 +227,7 @@ function App(){
       <div className="side-bottom"><StatusLight status={serviceStatus}/><small>IDENTIDAD · INGESTA · PLANIFICACIÓN</small><div className="build-id">CADA HORA CUENTA</div></div>
     </aside>
     <main className="main-area">
-      <header className="topbar"><div className="topbar-leading"><span className="topbar-mark" aria-hidden="true">✦</span><div><small>ESPACIO DE TRABAJO</small><div className="crumb"><span>{roleLabel(role)}</span><b>/</b>{tabLabel(tab)}</div></div></div><div className="top-actions"><ThemeToggle enabled={darkMode} onToggle={()=>setDarkMode(value=>!value)}/><StatusLight status={serviceStatus}/><div className="topbar-period"><small>PERÍODO</small><strong>{filters.mes||options.meses[options.meses.length-1]||'—'}</strong></div><div className="topbar-user"><span className="avatar" aria-hidden="true">{adminEmail.slice(0,2).toUpperCase()}</span><span className="topbar-user-copy"><strong>{roleLabel(role)}</strong><small>{adminEmail}</small></span></div><button className="topbar-logout" title="Cerrar sesión" aria-label="Cerrar sesión" onClick={logout}><span aria-hidden="true">↗</span><span>Salir</span></button></div></header>
+      <header className="topbar"><div className="topbar-leading"><span className="topbar-mark" aria-hidden="true">✦</span><div><small>ESPACIO DE TRABAJO</small><div className="crumb"><span>{roleLabel(role)}</span><b>/</b>{tabLabel(tab)}</div></div></div><div className="top-actions"><ContrastToggle enabled={highContrast} onToggle={toggleContrast}/><ThemeToggle enabled={darkMode} onToggle={toggleDark}/><StatusLight status={serviceStatus}/><div className="topbar-period"><small>PERÍODO</small><strong>{filters.mes||options.meses[options.meses.length-1]||'—'}</strong></div><div className="topbar-user"><span className="avatar" aria-hidden="true">{adminEmail.slice(0,2).toUpperCase()}</span><span className="topbar-user-copy"><strong>{roleLabel(role)}</strong><small>{adminEmail}</small></span></div><button className="topbar-logout" title="Cerrar sesión" aria-label="Cerrar sesión" onClick={logout}><span aria-hidden="true">↗</span><span>Salir</span></button></div></header>
       <div className="page-wrap">
         <div className="page-heading"><div><div className="eyebrow">PLANIFICACIÓN ASISTENCIAL <span>●</span> {roleLabel(role).toUpperCase()}</div><h1>{pageTitle(tab)}</h1><p>{pageDescription(tab)}</p></div><div className="heading-actions">{tab==='overview'&&role!=='usuario'&&MANUAL_RECALC&&<Button variant="primary" className="button button-primary" onClick={calculate}><span>⟳</span> Recalcular plan</Button>}</div></div>
         {(error||notice)&&<div className={`toast ${error?'toast-error':''}`}><span>{error||notice}</span><button onClick={()=>{setError('');setNotice('')}}>×</button></div>}
@@ -260,7 +270,12 @@ function ThemeToggle({enabled,onToggle,login=false}:{enabled:boolean;onToggle:()
     </svg><span>{enabled?'Claro':'Oscuro'}</span>
   </button>
 }
-function LoginScreen({loading,onLogin,status,darkMode,onToggleTheme}:{loading:boolean;onLogin:(token:string,email:string,role:Role)=>void;status:'green'|'yellow'|'red';darkMode:boolean;onToggleTheme:()=>void}){
+function ContrastToggle({enabled,onToggle,login=false}:{enabled:boolean;onToggle:()=>void;login?:boolean}){
+  return <button type="button" className={`theme-toggle${login?' login-mode':''}`} onClick={onToggle} aria-label="Alto contraste" aria-pressed={enabled} title={enabled?'Desactivar alto contraste':'Activar alto contraste'}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor"/></svg><span>Alto contraste</span>
+  </button>
+}
+function LoginScreen({loading,onLogin,status,darkMode,onToggleTheme,highContrast,onToggleContrast}:{loading:boolean;onLogin:(token:string,email:string,role:Role)=>void;status:'green'|'yellow'|'red';darkMode:boolean;onToggleTheme:()=>void;highContrast:boolean;onToggleContrast:()=>void}){
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [busy,setBusy]=useState(false)
@@ -279,7 +294,7 @@ function LoginScreen({loading,onLogin,status,darkMode,onToggleTheme}:{loading:bo
     <div className="access-accent" aria-hidden="true"><div className="access-ring"/><div className="access-accent-copy"><span>TELETÓN CHILE</span><strong>El tiempo<br/>también transforma.</strong><p>Datos que ayudan a planificar una mejor atención.</p></div></div>
     <header className="access-header">
       <div className="access-brand"><span className="access-brand-mark"><img src="/teleton-logo.svg" alt="Logo de Teletón Chile"/></span><span><strong>Cada hora cuenta</strong><small>PLANIFICACIÓN ASISTENCIAL</small></span></div>
-      <ThemeToggle enabled={darkMode} onToggle={onToggleTheme} login/>
+      <span className="access-toggles"><ContrastToggle enabled={highContrast} onToggle={onToggleContrast} login/><ThemeToggle enabled={darkMode} onToggle={onToggleTheme} login/></span>
     </header>
     <div className="access-main">
       <div className="access-story">
@@ -317,7 +332,7 @@ function Overview({kpis,chartData,changes,onNavigate,canManage,darkMode,institut
       <Metric title="FOJA PROMEDIO" value={percent(kpis.foja)} unit="ocupación" detail="Horas directas / horas contratadas" accent="violet" icon="◉"/>
       <Metric title="CAMBIOS EN ESPERA" value={fmt(kpis.pending_changes)} unit="requieren revisión" detail="Decisión pendiente de aprobación" accent="amber" icon="↻"/>
     </div>
-    <div className="overview-grid"><section className="panel chart-panel"><div className="panel-head"><div><h2>{institute?`Capacidad por área · ${names[institute]||institute}`:'Capacidad por instituto'}</h2><p>Atenciones planificadas y meta de gestión. {institute?'Haz clic en un área para ver sus profesionales.':'Haz clic en un instituto para ver sus áreas.'}</p>{institute&&<button type="button" className="text-button" onClick={onNational}>← VOLVER A NACIONAL</button>}</div><span className="chart-legend"><i/> PLANIFICADO <i className="legend-cyan"/> META 90%</span></div><div className="chart-wrap">{chartData.length?<ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} margin={{top:10,right:14,left:2,bottom:0}} barGap={3}><CartesianGrid stroke={darkMode?'#354255':'#eeeff1'} vertical={false}/><XAxis dataKey="label" stroke={darkMode?'#aebacc':'#858995'} tickLine={false} axisLine={false} tickFormatter={value=>(institute?String(value):names[String(value)]||String(value)).slice(0,12)} angle={-30} textAnchor="end" height={75} interval={0} tick={{fontSize:11}}/><YAxis stroke={darkMode?'#aebacc':'#858995'} tickLine={false} axisLine={false} tickFormatter={fmt} tick={{fontSize:11}}/><Tooltip contentStyle={{background:darkMode?'#202c3b':'#fff',border:darkMode?'1px solid #425066':'1px solid #e7e7eb',borderRadius:8,color:darkMode?'#edf2f8':'#343842'}} formatter={(value)=>fmt(Number(value))}/><Bar dataKey="planned" name="Planificado" className="drill-bar" onClick={drill} fill={darkMode?'#f06478':'#c52131'} radius={[4,4,0,0]} maxBarSize={30}>{chartData.map((_,i)=><Cell key={i} fill={darkMode?(i===0?'#ff7188':'#d94c65'):(i===0?'#ae1f2b':'#d84b55')}/>)}</Bar><Bar dataKey="target" name="Meta 90%" className="drill-bar" onClick={drill} fill={darkMode?'#bd6b7c':'#e8a2a6'} radius={[4,4,0,0]} maxBarSize={30}/></BarChart></ResponsiveContainer>:<div className="empty-state">Sin datos planificados para estos filtros.</div>}</div><div className="chart-foot"><span><b>{chartData.length}</b> {institute?'áreas':'institutos'} en la vista</span><span><b>90%</b> piso actual de gestión</span></div></section>
+    <div className="overview-grid"><section className="panel chart-panel"><div className="panel-head"><div><h2>{institute?`Capacidad por área · ${names[institute]||institute}`:'Capacidad por instituto'}</h2><p>Atenciones planificadas y meta de gestión. {institute?'Haz clic en un área para ver sus profesionales.':'Haz clic en un instituto para ver sus áreas.'}</p>{institute&&<button type="button" className="text-button" onClick={onNational}>← VOLVER A NACIONAL</button>}</div><span className="chart-legend"><i/> PLANIFICADO <i className="legend-cyan"/> META 90%</span></div><div className="chart-wrap">{chartData.length?<ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} margin={{top:10,right:14,left:2,bottom:0}} barGap={3}><CartesianGrid stroke={darkMode?'#354255':'#eeeff1'} vertical={false}/><XAxis dataKey="label" stroke={darkMode?'#aebacc':'#5c616b'} tickLine={false} axisLine={false} tickFormatter={value=>(institute?String(value):names[String(value)]||String(value)).slice(0,12)} angle={-30} textAnchor="end" height={75} interval={0} tick={{fontSize:11}}/><YAxis stroke={darkMode?'#aebacc':'#5c616b'} tickLine={false} axisLine={false} tickFormatter={fmt} tick={{fontSize:11}}/><Tooltip contentStyle={{background:darkMode?'#202c3b':'#fff',border:darkMode?'1px solid #425066':'1px solid #e7e7eb',borderRadius:8,color:darkMode?'#edf2f8':'#343842'}} formatter={(value)=>fmt(Number(value))}/><Bar dataKey="planned" name="Planificado" className="drill-bar" onClick={drill} fill={darkMode?'#f06478':'#c52131'} radius={[4,4,0,0]} maxBarSize={30}>{chartData.map((_,i)=><Cell key={i} fill={darkMode?(i===0?'#ff7188':'#d94c65'):(i===0?'#ae1f2b':'#d84b55')}/>)}</Bar><Bar dataKey="target" name="Meta 90%" className="drill-bar" onClick={drill} fill={darkMode?'#bd6b7c':'#e8a2a6'} radius={[4,4,0,0]} maxBarSize={30}/></BarChart></ResponsiveContainer>:<div className="empty-state">Sin datos planificados para estos filtros.</div>}</div><div className="chart-foot"><span><b>{chartData.length}</b> {institute?'áreas':'institutos'} en la vista</span><span><b>90%</b> piso actual de gestión</span></div></section>
       <section className="panel changes-panel"><div className="panel-head"><div><h2>{canManage?'Radar de cambios':'Estado de planificación'}</h2><p>{canManage?'Últimos movimientos contractuales':'Consulta de indicadores nacionales'}</p></div>{canManage&&<button className="text-button" onClick={()=>onNavigate('changes')}>VER TODO ↗</button>}</div>{recent.length?<div className="change-feed">{recent.map(c=><div className="feed-item" key={c.id}><div className={`feed-icon ${c.state==='EN_ESPERA'?'pending':''}`}>{changeIcon(c.kind)}</div><div className="feed-copy"><b>{c.kind} <span>· {c.institute||'Nacional'}</span></b><p>PersonaId {c.person_id} · {displayValue(c.previous_value)} → {displayValue(c.new_value)}</p></div><span className={`state-pill ${c.state==='EN_ESPERA'?'wait':''}`}>{c.state==='EN_ESPERA'?'REVISAR':c.state}</span></div>)}</div>:<div className="empty-state">{canManage?'No se han detectado cambios.':'Explora los indicadores y la dotación desde el menú.'}</div>}{canManage&&<button className="button button-ghost full" onClick={()=>onNavigate('changes')}>Abrir bandeja de aprobaciones <span>→</span></button>}</section></div>
     <div className="bottom-strip"><div><span className="strip-icon">◷</span><div><b>{canManage?'PRÓXIMO PASO · CARGA MENSUAL':'VISTA DE CONSULTA'}</b><p>{canManage?'Recibe el BUK en Blue Prism o súbelo desde ingesta para generar una nueva versión.':'Consulta la planificación y sus indicadores desde las secciones disponibles.'}</p></div></div>{canManage&&<button onClick={()=>onNavigate('imports')}>IR A INGESTA <span>→</span></button>}</div>
   </>

@@ -65,6 +65,10 @@ El workflow falla de forma explícita si falta una URL HTTPS de API. GitHub Page
 
 Los permisos también se verifican en los microservicios. La sesión se conserva en `sessionStorage` hasta cerrar la pestaña o cerrar sesión.
 
+## Accesibilidad
+
+El botón "Alto contraste" (barra superior y acceso) cambia a texto negro, bordes marcados y tablas más grandes. Se activa solo si el sistema operativo pide más contraste (`prefers-contrast: more`) y la elección se recuerda en el navegador.
+
 ## Estado del sistema
 
 El semáforo consulta `/health` de los tres servicios cada 15 segundos: verde si todos responden, amarillo si responde al menos uno y rojo si no responde ninguno. Las consultas y la carga de datos requieren que el backend esté levantado.

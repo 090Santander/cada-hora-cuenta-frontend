@@ -1,0 +1,19 @@
+/* Alto contraste: texto negro, bordes marcados y tablas más grandes. Se activa desde la barra superior o con prefers-contrast: more. */
+:root.high-contrast { --ink: #000; --muted: #1a1d23; }
+.high-contrast body, .high-contrast .app-shell { background: #fff; }
+.high-contrast .panel, .high-contrast .filters-row, .high-contrast .metric-card,
+.high-contrast .change-card, .high-contrast .change-summary > div { border: 2px solid #000 !important; box-shadow: none !important; }
+.high-contrast .changes-panel { border: 0 !important; }
+.high-contrast :is(.page-heading h1, .panel-head h2, .page-heading p, .panel-head p, thead th, tbody td, .empty-state, .table-note,
+  .metric-top, .metric-detail, .metric-value, .metric-value small, .chart-legend, .chart-foot, .filter-scope, .filter-label,
+  .audit-row b, .audit-row p, .audit-row small, .audit-row time, .change-main > p, .change-main > small, .change-diff,
+  .change-summary span, .change-summary strong, .change-summary small, .page-footer, .bottom-strip p, .bottom-strip b,
+  .reject-row span, .reject-row small, .param-fields label, .param-json summary, .param-choice, .eyebrow, .section-kicker,
+  .timeline-before, .professional-subtitle) { color: #000 !important; }
+.high-contrast thead th { background: #fff; font-size: 12px; border-bottom: 2px solid #000; }
+.high-contrast tbody td { font-size: 14px; border-bottom-color: #000; }
+.high-contrast .filters-row select, .high-contrast .search-box, .high-contrast .param-fields input:not([type=checkbox]) { border: 2px solid #000; color: #000; background: #fff; }
+.high-contrast .metric-card::after { display: none; }
+.high-contrast :focus-visible { outline: 3px solid #000 !important; outline-offset: 3px; }
+.high-contrast a, .high-contrast .person-link { color: #7a0019; }
+.access-toggles { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
