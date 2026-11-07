@@ -30,7 +30,7 @@ jobs:
       - name: Instalar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
       - name: Validar direcciones del backend
         shell: bash
@@ -45,7 +45,7 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
       - name: Compilar para GitHub Pages
-        run: npm run build -- --base=/cada-hora-cuenta-frontend/
+        run: npx vite build --base=/cada-hora-cuenta-frontend/
       - name: Configurar Pages
         uses: actions/configure-pages@v5
       - name: Subir archivos estáticos
