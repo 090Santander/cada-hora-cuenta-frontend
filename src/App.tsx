@@ -119,7 +119,7 @@ function App(){
         getJson<PlanRow[]>(`${PLANNING}/api/planificacion${suffix}`),role==='usuario'?Promise.resolve([] as Change[]):getJson<Change[]>(`${PLANNING}/api/cambios`),
       ])
       setOptions(opt);setKpis(stats);setRows(planning);setChanges(changeList)
-    }catch{ /* El semáforo comunica el estado de conexión sin mostrar errores técnicos. */ }
+    }catch{setError('No se pudieron cargar los indicadores. Revisa el semáforo de servicios y vuelve a intentar.')}
     finally{setLoading(false)}
   },[query,role])
 
