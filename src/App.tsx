@@ -45,6 +45,10 @@ const fmt=(n:number)=>new Intl.NumberFormat('es-CL').format(n||0)
 const percent=(n:number)=>`${(n*100).toFixed(1)}%`
 
 function App(){
+  const [monochrome,setMonochrome]=useState(()=>{
+    try { return window.localStorage.getItem('chc_monochrome')==='1' }
+    catch { return false }
+  })
   const [authState,setAuthState]=useState<'checking'|'anonymous'|'authenticated'>('checking')
   const [adminEmail,setAdminEmail]=useState('')
   const [role,setRole]=useState<Role>('usuario')
@@ -69,6 +73,11 @@ function App(){
   const [paramKey,setParamKey]=useState('management_floor')
   const [paramText,setParamText]=useState('')
   const [audits,setAudits]=useState<Record<string,unknown>[]>([])
+
+  useEffect(()=>{
+    document.documentElement.classList.toggle('monochrome',monochrome)
+    try { window.localStorage.setItem('chc_monochrome',monochrome?'1':'0') } catch { /* El modo sigue disponible durante esta sesión. */ }
+  },[monochrome])
 
   useEffect(()=>{
     if(!sessionToken){setAuthState('anonymous');return}
@@ -179,7 +188,7 @@ function App(){
   }
   if(authState!=='authenticated') return <LoginScreen loading={authState==='checking'} onLogin={(token,email,userRole)=>{
     sessionToken=token;sessionStorage.setItem('chc_session',token);setAdminEmail(email);setRole(userRole);setTab('overview');setAuthState('authenticated')
-  }} status={serviceStatus}/>
+  }} status={serviceStatus} monochrome={monochrome} onToggleMonochrome={()=>setMonochrome(value=>!value)}/>
 
   return <div className="app-shell">
     <aside className="sidebar">
@@ -191,7 +200,7 @@ function App(){
       <div className="side-bottom"><StatusLight status={serviceStatus}/><small>IDENTIDAD · INGESTA · PLANIFICACIÓN</small><div className="build-id">CADA HORA CUENTA</div></div>
     </aside>
     <main className="main-area">
-      <header className="topbar"><div className="topbar-leading"><span className="topbar-mark" aria-hidden="true">✦</span><div><small>ESPACIO DE TRABAJO</small><div className="crumb"><span>{roleLabel(role)}</span><b>/</b>{tabLabel(tab)}</div></div></div><div className="top-actions"><StatusLight status={serviceStatus}/><div className="topbar-period"><small>PERÍODO</small><strong>{filters.mes||options.meses[options.meses.length-1]||'—'}</strong></div><div className="topbar-user"><span className="avatar" aria-hidden="true">{adminEmail.slice(0,2).toUpperCase()}</span><span className="topbar-user-copy"><strong>{roleLabel(role)}</strong><small>{adminEmail}</small></span></div><button className="topbar-logout" title="Cerrar sesión" aria-label="Cerrar sesión" onClick={logout}><span aria-hidden="true">↗</span><span>Salir</span></button></div></header>
+      <header className="topbar"><div className="topbar-leading"><span className="topbar-mark" aria-hidden="true">✦</span><div><small>ESPACIO DE TRABAJO</small><div className="crumb"><span>{roleLabel(role)}</span><b>/</b>{tabLabel(tab)}</div></div></div><div className="top-actions"><MonochromeToggle enabled={monochrome} onToggle={()=>setMonochrome(value=>!value)}/><StatusLight status={serviceStatus}/><div className="topbar-period"><small>PERÍODO</small><strong>{filters.mes||options.meses[options.meses.length-1]||'—'}</strong></div><div className="topbar-user"><span className="avatar" aria-hidden="true">{adminEmail.slice(0,2).toUpperCase()}</span><span className="topbar-user-copy"><strong>{roleLabel(role)}</strong><small>{adminEmail}</small></span></div><button className="topbar-logout" title="Cerrar sesión" aria-label="Cerrar sesión" onClick={logout}><span aria-hidden="true">↗</span><span>Salir</span></button></div></header>
       <div className="page-wrap">
         <div className="page-heading"><div><div className="eyebrow">PLANIFICACIÓN ASISTENCIAL <span>●</span> {roleLabel(role).toUpperCase()}</div><h1>{pageTitle(tab)}</h1><p>{pageDescription(tab)}</p></div><div className="heading-actions">{tab==='overview'&&role!=='usuario'&&<Button variant="primary" className="button button-primary" onClick={calculate}><span>⟳</span> Recalcular plan</Button>}</div></div>
         {(error||notice)&&<div className={`toast ${error?'toast-error':''}`}><span>{error||notice}</span><button onClick={()=>{setError('');setNotice('')}}>×</button></div>}
@@ -227,7 +236,11 @@ function StatusLight({status}:{status:'green'|'yellow'|'red'}){
   const label={green:'Sistema funcionando correctamente',yellow:'Problema de conexión con un servicio o base de datos',red:'Servicios sin conexión'}[status]
   return <span className={`traffic-light ${status}`} role="status" title={label} aria-label={label}><i/></span>
 }
-function LoginScreen({loading,onLogin,status}:{loading:boolean;onLogin:(token:string,email:string,role:Role)=>void;status:'green'|'yellow'|'red'}){
+function MonochromeToggle({enabled,onToggle,login=false}:{enabled:boolean;onToggle:()=>void;login?:boolean}){
+  const label=enabled?'Mostrar colores':'Activar blanco y negro'
+  return <button type="button" className={`monochrome-toggle${login?' login-mode':''}`} onClick={onToggle} aria-label={label} aria-pressed={enabled} title={label}><span aria-hidden="true">◐</span><span>B/N</span></button>
+}
+function LoginScreen({loading,onLogin,status,monochrome,onToggleMonochrome}:{loading:boolean;onLogin:(token:string,email:string,role:Role)=>void;status:'green'|'yellow'|'red';monochrome:boolean;onToggleMonochrome:()=>void}){
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [busy,setBusy]=useState(false)
@@ -242,7 +255,7 @@ function LoginScreen({loading,onLogin,status}:{loading:boolean;onLogin:(token:st
     }catch{setMessage('')}
     finally{setBusy(false)}
   }
-  return <main className="login-shell"><div className="login-content"><div className="login-brand"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Teleton_Chile_Logo.svg" alt="Logo de Teletón Chile"/><span>CADA HORA CUENTA<small>PLATAFORMA DE PLANIFICACIÓN ASISTENCIAL</small></span></div><div className="login-intro"><span className="login-kicker">ACCESO INSTITUCIONAL</span><h1>Planificar mejor.<br/><em>Atender más.</em></h1><p>Un espacio para transformar datos de dotación en decisiones claras para la atención.</p></div><Card className="login-card"><div className="login-card-head"><div><span>BIENVENIDO</span><h2>Inicia sesión</h2><p>Ingresa con tu cuenta del sistema.</p></div><StatusLight status={status}/></div><form onSubmit={submit}><label htmlFor="login-email">Correo electrónico</label><input id="login-email" type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="nombre@institucion.cl" required/><label htmlFor="login-password">Contraseña</label><input id="login-password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Ingresa tu contraseña" required/>{message&&<p className="login-error" role="alert">{message}</p>}<Button type="submit" variant="primary" disabled={busy||loading} className="button button-primary login-submit">{busy||loading?'Validando…':'Ingresar al sistema'} <span>→</span></Button></form></Card><p className="login-caption">Acceso restringido · Planificación central Teletón Chile</p></div><div className="login-visual" aria-hidden="true"><div className="login-orbit orbit-one"/><div className="login-orbit orbit-two"/><div className="login-visual-copy"><span>DATOS → DECISIONES → IMPACTO</span><strong>Cada hora<br/>cuenta.</strong><p>Una mirada integral para optimizar la capacidad asistencial.</p></div></div></main>
+  return <main className="login-shell"><div className="login-content"><div className="login-head"><div className="login-brand"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Teleton_Chile_Logo.svg" alt="Logo de Teletón Chile"/><span>CADA HORA CUENTA<small>PLATAFORMA DE PLANIFICACIÓN ASISTENCIAL</small></span></div><MonochromeToggle enabled={monochrome} onToggle={onToggleMonochrome} login/></div><div className="login-intro"><span className="login-kicker">ACCESO INSTITUCIONAL</span><h1>Planificar mejor.<br/><em>Atender más.</em></h1><p>Un espacio para transformar datos de dotación en decisiones claras para la atención.</p></div><Card className="login-card"><div className="login-card-head"><div><span>BIENVENIDO</span><h2>Inicia sesión</h2><p>Ingresa con tu cuenta del sistema.</p></div><StatusLight status={status}/></div><form onSubmit={submit}><label htmlFor="login-email">Correo electrónico</label><input id="login-email" type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="nombre@institucion.cl" required/><label htmlFor="login-password">Contraseña</label><input id="login-password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Ingresa tu contraseña" required/>{message&&<p className="login-error" role="alert">{message}</p>}<Button type="submit" variant="primary" disabled={busy||loading} className="button button-primary login-submit">{busy||loading?'Validando…':'Ingresar al sistema'} <span>→</span></Button></form></Card><p className="login-caption">Acceso restringido · Planificación central Teletón Chile</p></div><div className="login-visual" aria-hidden="true"><div className="login-orbit orbit-one"/><div className="login-orbit orbit-two"/><div className="login-visual-copy"><span>DATOS → DECISIONES → IMPACTO</span><strong>Cada hora<br/>cuenta.</strong><p>Una mirada integral para optimizar la capacidad asistencial.</p></div></div></main>
 }
 function AssistantPanel(){return <section className="assistant-layout"><Card className="assistant-hero"><span className="assistant-eyebrow">PRÓXIMA INTEGRACIÓN · BLUE PRISM</span><div className="assistant-orb">✦</div><h2>Asistente inteligente</h2><p>La interfaz del asistente está preparada para conectar el flujo de Blue Prism cuando se reciba su contrato de integración. Las respuestas quedarán vinculadas a datos autorizados y a la trazabilidad del sistema.</p><div className="assistant-capabilities"><span>Consultas de planificación</span><span>Explicación de brechas</span><span>Apoyo en decisiones</span></div></Card><Card className="assistant-chat"><div className="assistant-chat-head"><div className="assistant-avatar">✦</div><div><strong>Asistente de planificación</strong><small>Integración pendiente</small></div></div><div className="assistant-message"><span>✦</span><p>Cuando conectemos Blue Prism, podrás consultar aquí los indicadores, cambios y proyecciones de forma segura.</p></div><div className="assistant-composer"><input aria-label="Consulta al asistente" placeholder="Disponible al conectar Blue Prism" disabled/><button disabled aria-label="Enviar consulta">→</button></div></Card></section>}
 function displayValue(value:string){try{const parsed=JSON.parse(value) as Record<string,unknown>;return Object.entries(parsed).map(([key,val])=>`${key}: ${String(val)}`).join(' · ')}catch{return value||'—'}}
