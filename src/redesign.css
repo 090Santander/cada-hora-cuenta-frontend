@@ -349,33 +349,8 @@ tbody td:nth-child(4) { min-width: 180px; }
 .topbar-logout:hover { background: #fff; color: #ad1a31; }
 .topbar-logout span:first-child { font-size: 17px; transform: rotate(45deg); }
 
-/* Blue Prism assistant extension point. */
-.assistant-eyebrow { color: #b51e36; font-size: 12px; letter-spacing: .16em; font-weight: 800; }
-.assistant-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, .9fr); gap: 20px; }
-.assistant-hero, .assistant-chat { min-height: 475px; border-radius: 24px !important; padding: clamp(25px, 3vw, 40px); }
-.assistant-hero { color: white; position: relative; overflow: hidden; background: linear-gradient(145deg, #8c1027, #d62d47 75%, #ed5165); }
-.assistant-hero::after { content: ''; width: 320px; height: 320px; border: 1px solid #ffffff35; border-radius: 50%;
   position: absolute; top: -150px; right: -110px; box-shadow: 0 0 0 35px #ffffff12, 0 0 0 70px #ffffff0b; }
-.assistant-hero > * { position: relative; z-index: 1; }
-.assistant-eyebrow { color: #ffe8ed; }
-.assistant-orb { width: 100px; height: 100px; border-radius: 30px; display: grid; place-items: center; font-size: 46px;
   background: #ffffff27; border: 1px solid #ffffff75; box-shadow: 0 15px 40px #52061b5c; margin: 56px 0 26px; animation: rise-in .7s both; }
-.assistant-hero h2 { font-size: clamp(32px, 3vw, 48px); letter-spacing: -.04em; margin: 0 0 12px; }
-.assistant-hero p { color: #ffe9ed; font-size: 16px; line-height: 1.65; max-width: 55ch; }
-.assistant-capabilities { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 27px; }
-.assistant-capabilities span { border: 1px solid #ffffff70; border-radius: 999px; padding: 8px 12px; color: white; font-size: 12px; }
-.assistant-chat { display: flex; flex-direction: column; background: #fff; border: 1px solid #e7e9ef !important; }
-.assistant-chat-head { display: flex; align-items: center; gap: 13px; padding-bottom: 22px; border-bottom: 1px solid #eceef2; }
-.assistant-avatar { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; background: #fff0f2; color: #be263c; font-size: 24px; }
-.assistant-chat-head strong, .assistant-chat-head small { display: block; }
-.assistant-chat-head strong { font-size: 16px; color: #283142; }
-.assistant-chat-head small { font-size: 13px; color: #7d8897; }
-.assistant-message { margin: auto 0; display: flex; align-items: flex-start; gap: 12px; }
-.assistant-message span { width: 32px; height: 32px; flex: none; border-radius: 11px; display: grid; place-items: center; background: #bd2a42; color: white; }
-.assistant-message p { max-width: 45ch; margin: 0; padding: 16px; border-radius: 5px 17px 17px; background: #f4f5f8; color: #505b6b; font-size: 14px; line-height: 1.6; }
-.assistant-composer { display: flex; gap: 9px; padding-top: 20px; border-top: 1px solid #eceef2; }
-.assistant-composer input { flex: 1; min-width: 0; border-radius: 12px; border: 1px solid #e2e5ec; padding: 0 14px; min-height: 46px; }
-.assistant-composer button { width: 46px; border-radius: 12px; border: 0; background: #eef0f4; color: #8c96a5; }
 .users-layout { display: grid; grid-template-columns: minmax(300px,.85fr) minmax(0,1.15fr); gap: 20px; }
 .users-form, .users-list { padding: 28px; border-radius: 22px !important; }
 .users-form form { display: grid; gap: 17px; }
@@ -391,7 +366,6 @@ tbody td:nth-child(4) { min-width: 180px; }
 @media (max-width: 1060px) {
   .filters-row { flex-wrap: wrap; }
   .filter-scope { margin-left: 0; }
-  .assistant-layout { grid-template-columns: 1fr; }
   .users-layout { grid-template-columns: 1fr; }
   .topbar-user-copy { display: none; }
 }
@@ -446,7 +420,6 @@ tbody td:nth-child(4) { min-width: 180px; }
   .search-box { width: 100%; }
   .search-box input { flex: 1; width: 100%; }
   .bottom-strip { flex-wrap: wrap; }
-  .assistant-hero, .assistant-chat { min-height: 400px; }
 }
 
 /* Decision and activity views. */

@@ -60,8 +60,8 @@ El workflow falla de forma explícita si falta una URL HTTPS de API. GitHub Page
 | Perfil | Secciones |
 | --- | --- |
 | Superadministrador | Todas, incluidas cuentas, auditoría y edición de parámetros |
-| Administrador | Resumen, dotación, cambios, plan vs real, parámetros en consulta, ingesta y asistente |
-| Usuario | Resumen, dotación, plan vs real y asistente |
+| Administrador | Resumen, dotación, cambios, plan vs real, parámetros en consulta, e ingesta |
+| Usuario | Resumen, dotación, y plan vs real |
 
 Los permisos también se verifican en los microservicios. La sesión se conserva en `sessionStorage` hasta cerrar la pestaña o cerrar sesión.
 
@@ -71,7 +71,7 @@ El semáforo consulta `/health` de los tres servicios cada 15 segundos: verde si
 
 ## Blue Prism
 
-La vista del asistente está preparada visualmente. El campo de chat permanecerá desactivado hasta recibir el bot y su contrato de integración; el adaptador y las credenciales pertenecerán al backend.
+Blue Prism orquesta el ciclo mensual y llama a los servicios de ingesta y planificación. La sección Trazabilidad muestra la bitácora del bot (eventos registrados por Blue Prism) separada de las acciones de personas.
 
 ## Logo
 
