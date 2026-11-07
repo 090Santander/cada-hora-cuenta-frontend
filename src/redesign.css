@@ -348,9 +348,6 @@ tbody td:nth-child(4) { min-width: 180px; }
   color: white; background: #ffffff20; border: 1px solid #ffffff68; border-radius: 11px; font-size: 12px; font-weight: 750; }
 .topbar-logout:hover { background: #fff; color: #ad1a31; }
 .topbar-logout span:first-child { font-size: 17px; transform: rotate(45deg); }
-
-  position: absolute; top: -150px; right: -110px; box-shadow: 0 0 0 35px #ffffff12, 0 0 0 70px #ffffff0b; }
-  background: #ffffff27; border: 1px solid #ffffff75; box-shadow: 0 15px 40px #52061b5c; margin: 56px 0 26px; animation: rise-in .7s both; }
 .users-layout { display: grid; grid-template-columns: minmax(300px,.85fr) minmax(0,1.15fr); gap: 20px; }
 .users-form, .users-list { padding: 28px; border-radius: 22px !important; }
 .users-form form { display: grid; gap: 17px; }
