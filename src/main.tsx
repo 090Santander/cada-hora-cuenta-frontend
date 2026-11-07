@@ -6,6 +6,7 @@ import './redesign.css'
 import './theme.css'
 import './login.css'
 import './users.css'
+import './navigation.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode><App /></React.StrictMode>,

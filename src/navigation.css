@@ -1,0 +1,44 @@
+/* Full labels remain readable while the navigation stays compact. */
+@media (min-width: 761px) {
+  .sidebar { width: 286px; scrollbar-width: none; }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .main-area { margin-left: 302px; }
+  .sidebar .brand { align-items: center; min-width: 0; gap: 10px; }
+  .sidebar .brand-logo { width: 76px; height: 76px; padding: 4px; }
+  .sidebar .brand > div { min-width: 0; }
+  .sidebar .brand strong, .sidebar .brand small { white-space: normal; overflow: visible; overflow-wrap: normal; word-break: normal; }
+  .sidebar .brand strong { font-size: 13px; line-height: 1.2; }
+  .sidebar nav { gap: 5px; }
+  .sidebar .nav-item { width: 100%; height: auto; min-height: 55px; padding-block: 7px; }
+  .sidebar .nav-item .nav-label { display: block; white-space: normal; overflow: visible; overflow-wrap: normal; word-break: normal; line-height: 1.25; font-size: 14px; }
+  .topbar-leading .crumb { max-width: 100%; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; }
+}
+@media (min-width: 761px) and (max-width: 1180px) {
+  .sidebar { width: 268px; }
+  .main-area { margin-left: 284px; }
+  .sidebar .brand-logo { width: 68px; height: 68px; }
+  .sidebar .nav-item { min-height: 53px; }
+}
+@media (min-width: 761px) and (max-width: 920px) {
+  .sidebar { width: 248px; }
+  .main-area { margin-left: 264px; }
+  .topbar { padding-inline: 16px; gap: 8px; }
+  .top-actions { gap: 8px; }
+  .topbar-period { display: none; }
+  .topbar .theme-toggle { min-width: 42px; width: 42px; padding: 0; }
+  .topbar .theme-toggle span { display: none; }
+}
+@media (max-width: 760px) {
+  .sidebar .brand { min-width: 0; }
+  .sidebar .brand strong, .sidebar .brand small { white-space: normal; overflow: visible; }
+  .sidebar nav { scrollbar-width: thin; scrollbar-color: #ffffff8a transparent; }
+  .sidebar .nav-item { width: max-content; min-width: max-content; height: 48px; padding-inline: 10px; }
+  .sidebar .nav-item .nav-label { display: block; white-space: nowrap; font-size: 12px; }
+  .topbar { height: auto; min-height: 68px; }
+  .topbar-leading .crumb { max-width: 100%; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; }
+}
+@media (max-width: 480px) {
+  .sidebar .nav-item { width: max-content; min-width: max-content; height: 48px; padding: 5px 12px; }
+  .sidebar .nav-item .nav-label { display: block; }
+  .topbar-leading .crumb { max-width: calc(100vw - 190px); }
+}
