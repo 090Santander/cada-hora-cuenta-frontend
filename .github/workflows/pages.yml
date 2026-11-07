@@ -20,10 +20,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    env:
-      VITE_AUTH_URL: ${{ vars.VITE_AUTH_URL }}
-      VITE_PLANNING_URL: ${{ vars.VITE_PLANNING_URL }}
-      VITE_INGESTION_URL: ${{ vars.VITE_INGESTION_URL }}
     steps:
       - name: Obtener código
         uses: actions/checkout@v4
@@ -32,16 +28,6 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - name: Validar direcciones del backend
-        shell: bash
-        run: |
-          for name in VITE_AUTH_URL VITE_PLANNING_URL VITE_INGESTION_URL; do
-            value="${!name}"
-            if [[ ! "$value" =~ ^https://[^[:space:]]+$ ]]; then
-              echo "Configura $name con una URL HTTPS en Settings > Secrets and variables > Actions > Variables."
-              exit 1
-            fi
-          done
       - name: Instalar dependencias
         run: npm ci
       - name: Compilar para GitHub Pages
